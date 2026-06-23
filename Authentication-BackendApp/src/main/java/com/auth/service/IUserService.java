@@ -8,11 +8,11 @@ public interface IUserService {
 
 	public UserDto getUserByEmail(String email);
 
-	public UserDto updateUser(UserDto userdto, String userId);
+	public UserDto updateUser(UserDto userdto, Long userId);
 
-	public void deleteUser(String userId);
+	public void deleteUser(Long userId);
 
-	public UserDto getUserById(String userId);
+	public UserDto getUserById(Long userId);
 
 	Iterable<UserDto> getAllUsers();
 }
