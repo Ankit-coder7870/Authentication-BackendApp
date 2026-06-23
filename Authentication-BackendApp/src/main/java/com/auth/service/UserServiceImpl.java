@@ -1,5 +1,7 @@
 package com.auth.service;
 
+import java.time.LocalDateTime;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import com.auth.dto.UserDto;
@@ -51,6 +53,7 @@ public class UserServiceImpl implements IUserService {
         if(userDto.getImage() != null) existingUser.setImage(userDto.getImage());
         if(userDto.getProvider() != null) existingUser.setProvider(userDto.getProvider());
         if(userDto.getPassword() != null) existingUser.setPassword(userDto.getPassword());
+        existingUser.setUpdatedAt(LocalDateTime.now());
         existingUser.setEnable(userDto.isEnable());
         User updateUser = userRepo.save(existingUser);
 		return modelMapper.map(updateUser, UserDto.class);
