@@ -1,11 +1,16 @@
 package com.auth.entity;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,12 +32,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Table(name = "users")
-public class User {
-  
+public class User implements UserDetails{
+
 	@Id
 	@Column(name = "user_id")
 	private Long id;
-	@Column(name = "User_name",length = 50)
+	@Column(name = "User_name", length = 50)
 	private String name;
 	@Column(length = 50)
 	private String email;
@@ -46,10 +51,17 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	private Provider provider = Provider.LOCAL;
 	@ManyToMany
-	@JoinTable( name = "user_roles",
-		    joinColumns = @JoinColumn(name = "user_id"),
-		    inverseJoinColumns = @JoinColumn(name = "role_id"))
+	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles = new HashSet<>();
-	
-	
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).toList();
+	}
+
+	@Override
+	public String getUsername() {
+		return this.email;
+	}
+
 }

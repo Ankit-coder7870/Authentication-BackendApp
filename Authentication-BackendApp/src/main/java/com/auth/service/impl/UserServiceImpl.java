@@ -1,4 +1,4 @@
-package com.auth.service;
+package com.auth.service.impl;
 
 import java.time.LocalDateTime;
 
@@ -9,6 +9,8 @@ import com.auth.entity.Provider;
 import com.auth.entity.User;
 import com.auth.exception.ResourceNotFoundException;
 import com.auth.repository.IUserRepository;
+import com.auth.service.IUserService;
+
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
