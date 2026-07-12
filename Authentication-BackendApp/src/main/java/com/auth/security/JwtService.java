@@ -35,8 +35,6 @@ public class JwtService {
 			@Value("${security.jwt.refresh-ttl-seconds}") long refreshTtlSeconds,
 			@Value("${security.jwt.issuer}") String issuer) {
 		
-		System.out.println("Secret = " + secret);
-		System.out.println("Length = " + (secret == null ? 0 : secret.length()));
 
 		if (secret == null || secret.length() < 64) {
 			throw new IllegalArgumentException("Invalid Secret");
