@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 public class SecurityConfig {
-	
+
 	@Autowired
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -36,12 +36,10 @@ public class SecurityConfig {
 					response.setStatus(401);
 					response.setContentType("application/json");
 					String message = "Unauthorized access" + e.getMessage();
-					Map<String, String> errorMap = Map.of("message", message, "status", String.valueOf(401),
-							"statusCode", String.valueOf(401));
+					Map<String, String> errorMap = Map.of("message", message, "statusCode", String.valueOf(401));
 					ObjectMapper objectMapper = new ObjectMapper();
 					response.getWriter().write(objectMapper.writeValueAsString(errorMap));
-				}))
-				.addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter.class);
+				})).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
 
