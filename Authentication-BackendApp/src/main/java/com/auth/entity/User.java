@@ -16,33 +16,45 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Entity
 @Data
 @AllArgsConstructor
+@RequiredArgsConstructor
 @NoArgsConstructor
 @Builder
 @Table(name = "users")
-public class User implements UserDetails{
+public class User implements UserDetails {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "user_id")
 	private Long id;
+	@NonNull
 	@Column(name = "User_name", length = 50)
 	private String name;
 	@Column(length = 50)
+	@NonNull
 	private String email;
+	@NonNull
 	private String password;
+	@NonNull
 	private String image;
+	@NonNull
 	private boolean enable = true;
 	@CreationTimestamp
 	private LocalDateTime createdAt;

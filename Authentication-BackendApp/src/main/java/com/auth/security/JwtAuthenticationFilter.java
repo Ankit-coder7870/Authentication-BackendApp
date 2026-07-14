@@ -38,13 +38,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 
 		String header = request.getHeader("Authorization");
+		System.out.println("Header :" + header);
 
 		if (header != null && header.startsWith("Bearer ")) {
 			String token = header.substring(7);
-
-			
+			System.out.println("Token :" + token);
 			try {
-				
+
 				if (!jwtService.isAccessToken(token)) {
 					filterChain.doFilter(request, response);
 					return;
@@ -54,9 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				Claims payload = parse.getPayload();
 				long id = Long.parseLong(payload.getSubject());
 
-				System.out.println(id);
-
-				userRepository.findById(id).ifPresent(user -> {
+				userRepository.findByIdWithRoles(id).ifPresent(user -> {
 
 					if (user.isEnable()) {
 
@@ -73,18 +71,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				});
 
 			} catch (ExpiredJwtException e) {
-				e.printStackTrace();
-
-			} catch (MalformedJwtException e) {
-				e.printStackTrace();
+				request.setAttribute("error", "Expired Token");
 			} catch (JwtException e) {
-				e.printStackTrace();
+				request.setAttribute("error", "Invalid Token");
 			} catch (Exception e) {
-				e.printStackTrace();
+				e.printStackTrace(); // Let unexpected errors surface
 			}
 
 		}
 		filterChain.doFilter(request, response);
+	}
+
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+		return request.getRequestURI().startsWith("/api/v1/auth");
 	}
 
 }
