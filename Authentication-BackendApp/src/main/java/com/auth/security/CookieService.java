@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
 
 @Service
+@Getter
 public class CookieService {
 
 	private final String refreshTokenCookieName;

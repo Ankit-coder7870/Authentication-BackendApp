@@ -89,9 +89,9 @@ public class JwtService {
 		return "refresh".equals(c.get("type"));
 	}
 
-	public UUID getUserId(String token) {
+	public Long getUserId(String token) {
 		Claims c = parse(token).getPayload();
-		return UUID.fromString(c.getSubject());
+		 return Long.parseLong(c.getSubject());
 	}
 
 	public String getJti(String token) {
