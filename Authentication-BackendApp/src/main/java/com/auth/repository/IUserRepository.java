@@ -22,4 +22,12 @@ public interface IUserRepository extends JpaRepository<User, Long> {
 			WHERE u.id = :id
 			""")
 	Optional<User> findByIdWithRoles(Long id);
+	
+	@Query("""
+			SELECT u
+			FROM User u
+			LEFT JOIN FETCH u.roles
+			WHERE u.email = :email
+			""")
+			Optional<User> findByEmailWithRoles(String email);
 }
