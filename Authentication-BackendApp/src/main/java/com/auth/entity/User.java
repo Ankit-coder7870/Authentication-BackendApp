@@ -50,7 +50,6 @@ public class User implements UserDetails {
 	@Column(length = 50)
 	@NonNull
 	private String email;
-	@NonNull
 	private String password;
 	@NonNull
 	private String image;
@@ -62,6 +61,7 @@ public class User implements UserDetails {
 	private LocalDateTime updatedAt;
 	@Enumerated(EnumType.STRING)
 	private Provider provider = Provider.LOCAL;
+	private String providerId;
 	@ManyToMany
 	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles = new HashSet<>();
