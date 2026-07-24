@@ -41,9 +41,7 @@ public class SecurityConfig {
 		http.csrf(e -> e.disable()).cors(Customizer.withDefaults())
 				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-						.requestMatchers("/api/v1/auth/register").permitAll().requestMatchers("/api/v1/auth/refresh")
-						.permitAll().requestMatchers("/api/v1/auth/login").permitAll()
-						.requestMatchers("/api/v1/auth/logout").permitAll().anyRequest().authenticated())
+						.requestMatchers(AppContants.AUTH_PUBLIC_URl).permitAll().anyRequest().authenticated())
 				.oauth2Login(oauth2 -> oauth2.successHandler(auth2SuccessHandler).failureHandler(null))
 				.logout(AbstractHttpConfigurer::disable)
 				.exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, e) -> {
