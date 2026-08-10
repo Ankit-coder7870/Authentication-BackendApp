@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class UserDto {
 
 	private Long id;
-	@Column(name = "User_name", length = 50)
+	@Column( length = 50)
 	private String name;
 	@Column(length = 50)
 	private String email;

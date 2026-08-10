@@ -1,6 +1,7 @@
 package com.auth.security;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -55,8 +56,8 @@ public class JwtService {
 	// generate access token
 	public String generateAccessToken(User user) {
 		Instant now = Instant.now();
-		List<String> roles =  user.getRoles() == null
-		        ? List.of() : user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
+		List<String> roles = user.getRoles() == null ? List.of()
+				: user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
 		return Jwts.builder().id(UUID.randomUUID().toString()).subject(user.getId().toString()).issuer(issuer)
 				.issuedAt(Date.from(now)).expiration(Date.from(now.plusSeconds(accessTtlSeconds)))
 				.claims(Map.of("email", user.getEmail(), "roles", roles, "type", "access"))
@@ -98,5 +99,14 @@ public class JwtService {
 	public String getJti(String token) {
 		return parse(token).getPayload().getId();
 
+	}
+
+	public Duration getRemainingValidity(String token) {
+
+		Date expiration = parse(token).getPayload().getExpiration();
+
+		Duration remaining = Duration.between(Instant.now(), expiration.toInstant());
+
+		return remaining.isNegative() ? Duration.ZERO : remaining;
 	}
 }

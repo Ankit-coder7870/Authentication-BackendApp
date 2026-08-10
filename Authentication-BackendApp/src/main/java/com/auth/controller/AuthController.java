@@ -1,5 +1,6 @@
 package com.auth.controller;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import com.auth.dto.TokenResponse;
 import com.auth.dto.UserDto;
 import com.auth.entity.RefreshTokens;
 import com.auth.entity.User;
+import com.auth.redis.ITokenBlacklistService;
 import com.auth.repository.IRefreshTokenRepository;
 import com.auth.repository.IUserRepository;
 import com.auth.security.CookieService;
@@ -49,9 +51,16 @@ public class AuthController {
 	private final JwtService jwtService;
 	private final ModelMapper modelMapper;
 	private final CookieService cookieService;
+	private final ITokenBlacklistService blacklistService;
 
 	@PostMapping("/register")
 	public ResponseEntity<UserDto> registerUser(@RequestBody UserDto userDto) {
+		System.out.println("========== REGISTER ==========");
+	    System.out.println("Name: " + userDto.getName());
+	    System.out.println("Email: " + userDto.getEmail());
+	    System.out.println("Password received: "
+	            + (userDto.getPassword() != null));
+	    
 		return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(userDto));
 	}
 
@@ -94,33 +103,57 @@ public class AuthController {
 
 		var newRefreshTokenDb = RefreshTokens.builder().jti(newJti).user(user).createdAt(Instant.now())
 				.expiredAt(Instant.now().plusSeconds(jwtService.getRefreshTtlSeconds())).build();
-         refreshTokenRepository.save(newRefreshTokenDb);
-         
-         String newRefreshToken = jwtService.refreshAccessToken(user, newJti);
-         String newAccessToken = jwtService.generateAccessToken(user);
-         
-         cookieService.attachRefreshCookie(response, newRefreshToken,(int)jwtService.getRefreshTtlSeconds());
-         cookieService.addNoStoreHeaders(response);
-          
-         return ResponseEntity.ok(TokenResponse.of(newAccessToken, newRefreshToken, jwtService.getAccessTtlSeconds(), modelMapper.map(user, UserDto.class)));
+		refreshTokenRepository.save(newRefreshTokenDb);
+
+		String newRefreshToken = jwtService.refreshAccessToken(user, newJti);
+		String newAccessToken = jwtService.generateAccessToken(user);
+
+		cookieService.attachRefreshCookie(response, newRefreshToken, (int) jwtService.getRefreshTtlSeconds());
+		cookieService.addNoStoreHeaders(response);
+
+		return ResponseEntity.ok(TokenResponse.of(newAccessToken, newRefreshToken, jwtService.getAccessTtlSeconds(),
+				modelMapper.map(user, UserDto.class)));
 
 	}
-	
-	//logout
+
+	// logout
 	@PostMapping("/logout")
-	public ResponseEntity<Void> logout(HttpServletRequest request,HttpServletResponse response){
-		readRefreshToken(null, request).ifPresent(token ->{
+	public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+		 System.out.println("====== LOGOUT API CALLED ======");
+
+		 System.out.println(request.getHeaderNames());
+		String authorization = request.getHeader("Authorization");
+		System.out.println("Authorization Header = " + authorization);
+		try {
+
+			if (authorization != null && authorization.startsWith("Bearer ")) {
+
+				String accessToken = authorization.substring(7);
+
+				String jti = jwtService.getJti(accessToken);
+
+				Duration ttl = jwtService.getRemainingValidity(accessToken);
+
+				if (!ttl.isZero() && !ttl.isNegative()) {
+					blacklistService.blacklist(jti, ttl);
+				}
+			}
+
+		} catch (JwtException ignored) {
+		}
+
+		readRefreshToken(null, request).ifPresent(token -> {
 			try {
-				if(jwtService.isRefreshToken(token)) {
+				if (jwtService.isRefreshToken(token)) {
 					String jti = jwtService.getJti(token);
-					refreshTokenRepository.findByJti(jti).ifPresent(t ->{
+					refreshTokenRepository.findByJti(jti).ifPresent(t -> {
 						t.setRevoked(true);
 						refreshTokenRepository.save(t);
 					});
 				}
-				
-			}catch(JwtException ignored) {
-				
+
+			} catch (JwtException ignored) {
+
 			}
 		});
 		cookieService.clearRefreshToken(response);
@@ -160,10 +193,11 @@ public class AuthController {
 	@PostMapping("/login")
 	public ResponseEntity<TokenResponse> loginUser(@RequestBody LoginRequest loginRequest,
 			HttpServletResponse response) {
+		
 
 		Authentication authenicate = authenicate(loginRequest);
 		User user = userRepository.findByEmail(loginRequest.email())
-				.orElseThrow(() -> new BadCredentialsException("Invalid Username or Password"));
+				.orElseThrow(() -> new BadCredentialsException("Invalid Username"));
 		if (!user.isEnable()) {
 			throw new DisabledException("User is disabled");
 		}

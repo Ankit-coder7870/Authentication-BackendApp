@@ -1,6 +1,7 @@
 package com.auth.security;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.auth.redis.ITokenBlacklistService;
 import com.auth.repository.IUserRepository;
 
 import io.jsonwebtoken.Claims;
@@ -32,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtService jwtService;
 	private final IUserRepository userRepository;
+	private final ITokenBlacklistService blacklistService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -49,6 +52,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					filterChain.doFilter(request, response);
 					return;
 				}
+				
+				// checking access token is blacklisted or not
+				String jti = jwtService.getJti(token);
+				Boolean blacklisted = blacklistService.isBlacklisted(jti);
+				
+				if (blacklisted) {
+				    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				    response.getWriter().write("Access token has been revoked");
+				    return;
+				}
+				
 
 				Jws<Claims> parse = jwtService.parse(token);
 				Claims payload = parse.getPayload();
@@ -84,7 +98,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-		return request.getRequestURI().startsWith("/api/v1/auth");
+		return request.getRequestURI().startsWith("/api/v1/auth")|| request.getRequestURI().equals("/error");
 	}
 
 }

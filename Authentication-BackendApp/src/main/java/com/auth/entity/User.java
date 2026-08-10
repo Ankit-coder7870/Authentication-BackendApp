@@ -50,8 +50,8 @@ public class User implements UserDetails {
 	@Column(length = 50)
 	@NonNull
 	private String email;
-	private String password;
 	@NonNull
+	private String password;
 	private String image;
 	@NonNull
 	private boolean enable = true;

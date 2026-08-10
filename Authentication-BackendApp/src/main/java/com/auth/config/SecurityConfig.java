@@ -1,8 +1,9 @@
 package com.auth.config;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.auth.dto.ApiError;
 import com.auth.security.JwtAuthenticationFilter;
@@ -45,6 +49,12 @@ public class SecurityConfig {
 				.oauth2Login(oauth2 -> oauth2.successHandler(auth2SuccessHandler).failureHandler(null))
 				.logout(AbstractHttpConfigurer::disable)
 				.exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, e) -> {
+					 System.out.println("========== AUTHENTICATION REQUIRED ==========");
+					    System.out.println("Request URI: " + request.getRequestURI());
+					    System.out.println("Request Method: " + request.getMethod());
+					    System.out.println("Exception: " + e.getClass().getName());
+					    System.out.println("Message: " + e.getMessage());
+
 
 					e.printStackTrace();
 					response.setStatus(401);
@@ -71,6 +81,23 @@ public class SecurityConfig {
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
 		return configuration.getAuthenticationManager();
+	}
+	
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.front-end-url}") String corsUrls) {
+		
+		String[] urls = corsUrls.trim().split(",");
+		
+		var config = new CorsConfiguration();
+		config.setAllowedOrigins(Arrays.asList(urls));
+		config.setAllowCredentials(true);
+		config.setAllowedMethods(List.of("GET","POST","DELETE","PATCH","PUT", "OPTIONS"));
+		config.setAllowedHeaders(List.of("*"));
+		
+		var source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return source;
+			
 	}
 
 }
