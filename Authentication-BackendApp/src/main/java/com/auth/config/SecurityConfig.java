@@ -6,11 +6,13 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,6 +30,7 @@ import com.auth.security.OAuth2SuccessHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -45,16 +48,14 @@ public class SecurityConfig {
 		http.csrf(e -> e.disable()).cors(Customizer.withDefaults())
 				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-						.requestMatchers(AppContants.AUTH_PUBLIC_URl).permitAll().anyRequest().authenticated())
+						.requestMatchers(AppContants.AUTH_PUBLIC_URl).permitAll()
+						.requestMatchers(HttpMethod.GET).hasRole(AppContants.GUEST_ROLE)
+						.requestMatchers("/api/v1/users/**").hasRole(AppContants.ADMIN_ROLE)
+						.anyRequest().authenticated())
 				.oauth2Login(oauth2 -> oauth2.successHandler(auth2SuccessHandler).failureHandler(null))
 				.logout(AbstractHttpConfigurer::disable)
 				.exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, e) -> {
-					 System.out.println("========== AUTHENTICATION REQUIRED ==========");
-					    System.out.println("Request URI: " + request.getRequestURI());
-					    System.out.println("Request Method: " + request.getMethod());
-					    System.out.println("Exception: " + e.getClass().getName());
-					    System.out.println("Message: " + e.getMessage());
-
+					 
 
 					e.printStackTrace();
 					response.setStatus(401);
@@ -69,7 +70,22 @@ public class SecurityConfig {
 							request.getRequestURI());
 					ObjectMapper objectMapper = new ObjectMapper();
 					response.getWriter().write(objectMapper.writeValueAsString(apiError));
-				})).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+				}).accessDeniedHandler((request, response, e) -> {
+
+                    response.setStatus(403);
+                    response.setContentType("application/json");
+                    String message = e.getMessage();
+                    String error = (String) request.getAttribute("error");
+                    if (error != null) {
+                        message = error;
+                    }
+                    var apiError = ApiError.of(HttpStatus.FORBIDDEN.value(), "Forbidden Access", message, request.getRequestURI(), true);
+                    var objectMapper = new ObjectMapper();
+                    response.getWriter().write(objectMapper.writeValueAsString(apiError));
+
+
+                })
+						).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
 

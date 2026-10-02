@@ -4,10 +4,14 @@ import java.time.LocalDateTime;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import com.auth.config.AppContants;
 import com.auth.dto.UserDto;
 import com.auth.entity.Provider;
+import com.auth.entity.Role;
 import com.auth.entity.User;
 import com.auth.exception.ResourceNotFoundException;
+import com.auth.repository.IRoleRepository;
 import com.auth.repository.IUserRepository;
 import com.auth.service.IUserService;
 
@@ -20,6 +24,7 @@ public class UserServiceImpl implements IUserService {
 
 	private final IUserRepository userRepo;
 	private final ModelMapper modelMapper;
+	private final IRoleRepository roleRepo;
 
 	@Override
 	@Transactional
@@ -32,9 +37,17 @@ public class UserServiceImpl implements IUserService {
 		if (userRepo.existsByEmail(userDto.getEmail())) {
 			throw new IllegalArgumentException("Email already exists");
 		}
-
+		
+		        
 		User user = modelMapper.map(userDto, User.class);
-		user.setProvider(userDto.getProvider() != null ? user.getProvider() : Provider.LOCAL);
+		
+		user.setProvider(userDto.getProvider() != null ? userDto.getProvider() : Provider.LOCAL);
+		//role assign to user
+		Role role = roleRepo.findByName(AppContants.GUEST_ROLE).orElse(null);
+		System.out.println("Roles "+user.getRoles());
+		 user.getRoles().add(role);
+
+		 
 		User savedUser = userRepo.save(user);
 		return modelMapper.map(savedUser, UserDto.class);
 

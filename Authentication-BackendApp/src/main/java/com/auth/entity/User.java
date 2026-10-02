@@ -34,7 +34,6 @@ import lombok.RequiredArgsConstructor;
 @Entity
 @Data
 @AllArgsConstructor
-@RequiredArgsConstructor
 @NoArgsConstructor
 @Builder
 @Table(name = "users")
@@ -44,16 +43,15 @@ public class User implements UserDetails {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "user_id")
 	private Long id;
-	@NonNull
+	
 	@Column(name = "User_name", length = 50)
 	private String name;
 	@Column(length = 50)
-	@NonNull
+	
 	private String email;
-	@NonNull
 	private String password;
 	private String image;
-	@NonNull
+	
 	private boolean enable = true;
 	@CreationTimestamp
 	private LocalDateTime createdAt;
@@ -62,6 +60,7 @@ public class User implements UserDetails {
 	@Enumerated(EnumType.STRING)
 	private Provider provider = Provider.LOCAL;
 	private String providerId;
+	
 	@ManyToMany
 	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles = new HashSet<>();

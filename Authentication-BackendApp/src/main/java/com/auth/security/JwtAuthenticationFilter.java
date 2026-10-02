@@ -56,7 +56,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				// checking access token is blacklisted or not
 				String jti = jwtService.getJti(token);
 				Boolean blacklisted = blacklistService.isBlacklisted(jti);
-				
+				System.out.println("JTI: " + jti);
+				System.out.println("Blacklisted: " + blacklisted);
 				if (blacklisted) {
 				    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				    response.getWriter().write("Access token has been revoked");
@@ -69,18 +70,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				long id = Long.parseLong(payload.getSubject());
 
 				userRepository.findByIdWithRoles(id).ifPresent(user -> {
-
+					System.out.println("User ID from token: " + id);
 					if (user.isEnable()) {
 
 						List<GrantedAuthority> authorities = user.getRoles() == null ? List.of()
 								: user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getName()))
 										.collect(Collectors.toList());
+						 System.out.println("Authorities: " + authorities);
 						UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
 								user.getEmail(), null, authorities);
 						usernamePasswordAuthenticationToken
 								.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 						if (SecurityContextHolder.getContext().getAuthentication() == null)
 							SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+						     System.out.println("Authentication SET");
 					}
 				});
 

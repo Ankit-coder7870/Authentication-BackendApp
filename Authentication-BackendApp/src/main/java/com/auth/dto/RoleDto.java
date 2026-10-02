@@ -1,5 +1,12 @@
 package com.auth.dto;
 
-public class RoleDto {
+import java.util.UUID;
 
+import lombok.Data;
+
+@Data
+public class RoleDto {
+    
+	 private UUID id;
+	  private String name;
 }

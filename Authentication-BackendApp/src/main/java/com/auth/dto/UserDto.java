@@ -1,6 +1,8 @@
 package com.auth.dto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import com.auth.entity.Provider;
 import com.auth.entity.Role;
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class UserDto {
-
+    
 	private Long id;
 	@Column( length = 50)
 	private String name;
@@ -25,11 +27,9 @@ public class UserDto {
 	private String image;
 	private boolean enable = true;
 
-	private LocalDateTime createdAt;
+	private Instant createdAt = Instant.now();
+    private Instant updatedAt = Instant.now();
 
-	private LocalDateTime updatedAt;
-
-	private Provider provider;
-
-	private Set<Role> roles;
+	private Provider provider = Provider.LOCAL;
+    private Set<RoleDto> roles = new HashSet<>();
 }
